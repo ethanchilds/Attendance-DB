@@ -11,16 +11,16 @@ CONNECTION_STRING = os.environ.get("mongo_URI")
 client = MongoClient(CONNECTION_STRING)
 
 # connect to relavent collections
-db = client.AttendaceDB
-groups = db.groups
-accounts = db.accounts
-attendance = db.attendance
-account_group = db.account_group
+DB = client.AttendaceDB
+GROUPS = DB.groups
+ACCOUNTS = DB.accounts
+ATTENDANCE = DB.attendance
+ACCOUNT_GROUP = DB.account_group
 
 # Walks users the account creation on entry
 def create_account():
     username = input("\nPlease enter an account username: ")
-    existing_user = accounts.find_one({"username": username})
+    existing_user = ACCOUNTS.find_one({"username": username})
 
     # If username is not in use, user will creat account under their selected username
     if not existing_user:
@@ -36,8 +36,8 @@ def create_account():
         }
 
         # registering account in account database
-        insert_document(accounts, document)
-        new_account_doc = accounts.find_one({"username": username}, {"username": 1, "password": 1, "first_name":1, "last_name":1})
+        insert_document(ACCOUNTS, document)
+        new_account_doc = ACCOUNTS.find_one({"username": username}, {"username": 1, "password": 1, "first_name":1, "last_name":1})
 
         return new_account_doc
     # User must choose another username
@@ -57,7 +57,7 @@ def login():
     username = input("\nPlease input your account username: ")
     password = input("Please enter your account password: ")
 
-    account = accounts.find_one({"username": username, "password": password}, {
+    account = ACCOUNTS.find_one({"username": username, "password": password}, {
         "username": 1, "password": 1, "first_name":1, "last_name":1})
 
     if account:
@@ -72,14 +72,14 @@ def user_options_menu(user_doc):
     2. Create new group
     3. Join group""")
 
-    concurrent_groups = account_group.find({"user_id": user_doc["_id"]}, {"group_id":1})
+    concurrent_groups = ACCOUNT_GROUP.find({"user_id": user_doc["_id"]}, {"group_id":1})
 
     if concurrent_groups:
 
         iterator = 4
 
         for group in concurrent_groups:
-            group_doc = groups.find_one({"_id":group["group_id"]}, {"group_name":1})
+            group_doc = GROUPS.find_one({"_id":group["group_id"]}, {"group_name":1})
             print("    {}. {}".format(iterator, group_doc["group_name"]))
             iterator+=1
 
@@ -89,7 +89,7 @@ def user_options_menu(user_doc):
 
 def create_group(user_doc):
     group_name = input("\nWhat would you like to name your group? ")
-    existing_group = groups.find_one({"group_name": group_name})
+    existing_group = GROUPS.find_one({"group_name": group_name})
 
     # If group name is not in use, user will create group under their selected group name
     if not existing_group:
@@ -101,7 +101,7 @@ def create_group(user_doc):
         }
 
         # registering group in group database
-        insert_id = insert_document(groups, group_doc)
+        insert_id = insert_document(GROUPS, group_doc)
 
         composite_doc = {
             "group_id": insert_id,
@@ -109,7 +109,7 @@ def create_group(user_doc):
             "user_role": "Admin"
         }
 
-        insert_document(account_group, composite_doc)
+        insert_document(ACCOUNT_GROUP, composite_doc)
 
 
     # User must choose another group name
@@ -119,7 +119,7 @@ def create_group(user_doc):
 
 def join_group(user_doc,group_name,join_code):
 
-    group = groups.find_one({"group_name":group_name, "join_code":join_code})
+    group = GROUPS.find_one({"group_name":group_name, "join_code":join_code})
 
     if group:
 
@@ -129,7 +129,7 @@ def join_group(user_doc,group_name,join_code):
             "user_role": "Member"
         }
 
-        insert_document(account_group, composite_doc)
+        insert_document(ACCOUNT_GROUP, composite_doc)
 
     else:
         print("Not a valid group and/or join code")
@@ -154,7 +154,7 @@ def account_tools(user_doc):
 
     if nav_choice == 3:
         new_user = input("\nWhat would you like to change your username to? ")
-        new_username = accounts.find_one({"username":new_user})
+        new_username = ACCOUNTS.find_one({"username":new_user})
 
         if not new_username:
             update_doc_key(user_doc, "last_name", new_name)
@@ -171,24 +171,24 @@ def account_tools(user_doc):
         username = input("Username: ")
         password = input("Password: ")
 
-        account = accounts.find_one({"username":username, "password":password})
+        account = ACCOUNTS.find_one({"username":username, "password":password})
         
         if account:
-            accounts.delete_one({"_id":account["_id"]})
+            ACCOUNTS.delete_one({"_id":account["_id"]})
 
-            concurrent_groups = account_group.find({"user_id": user_doc["_id"]}, {"group_id":1, "user_role":1})
+            concurrent_groups = ACCOUNT_GROUP.find({"user_id": user_doc["_id"]}, {"group_id":1, "user_role":1})
 
             if concurrent_groups:
                 for document in concurrent_groups:
-                    account_group.delete_one({"_id":document["_id"]})
+                    ACCOUNT_GROUP.delete_one({"_id":document["_id"]})
 
                     if document["user_role"] == "Admin":
-                        groups.delete_one({"_id":document["group_id"]})
-                        member_group = account_group.find({"group_id":document["group_id"]})
+                        GROUPS.delete_one({"_id":document["group_id"]})
+                        member_group = ACCOUNT_GROUP.find({"group_id":document["group_id"]})
 
                         if member_group:
                             for member in member_group:
-                                account_group.delete_one({"_id":member["_id"]})
+                                ACCOUNT_GROUP.delete_one({"_id":member["_id"]})
 
         else:
             print("incorrect username or password")
@@ -200,7 +200,7 @@ def update_doc_key(document, key, value):
         "$set": {key: document[key]}
     }
 
-    attendance.update_one({"_id":_id}, updates)
+    ATTENDANCE.update_one({"_id":_id}, updates)
 
 if __name__ == "__main__":
 
