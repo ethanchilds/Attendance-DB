@@ -220,14 +220,13 @@ def account_tools(user_doc):
             print("incorrect username or password")
 
 # simple function for changing a document value
-def update_doc_key(document, key):
+def update_doc_key(document, key, new_value):
     _id = document["_id"]
 
-    updates = {
-        "$set": {key: document[key]}
+    update = {
+        "$set": {key: new_value}
     }
-
-    ATTENDANCE.update_one({"_id":_id}, updates)
+    ACCOUNTS.update_one({"_id":_id}, update)
 
 # Finds and creates a list of all groups that user is currently a part of
 def find_user_groups(user_doc):
