@@ -39,3 +39,4 @@ As I said previously, this software isn't yet at the point where I believe it co
 - Improving function structure to provide ease of understanding and less repetition within the code. Will likely be seperating any UI functions from database functions and placing them in new files for ease of debugging.
 - Looping and creating a back feature so that the user may stay inside the software until they are done.
 - Providing more member and admin features.
+- Creating collection schemas
